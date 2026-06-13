@@ -36,6 +36,13 @@ if [ -n "${BWS_ACCESS_TOKEN:-}" ]; then
       echo "⚠️ [Container] Warning: 'Linear API Key' not found in BWS project." >&2
     fi
 
+    # Resolve GitHub PAT and export as GITHUB_TOKEN for in-container gh CLI support
+    RESOLVED_GH_PAT=$(echo "$SECRET_DATA" | jq -r '.[] | select(.key == "GitHub PAT") | .value' 2>/dev/null | xargs || echo "")
+    if [ -n "$RESOLVED_GH_PAT" ]; then
+      export GITHUB_TOKEN="$RESOLVED_GH_PAT"
+      echo "✓ [Container] Successfully resolved GitHub PAT." >&2
+    fi
+
     # Resolve Context7 API Key and format as Bearer token
     RESOLVED_C7_KEY=$(echo "$SECRET_DATA" | jq -r '.[] | select(.key == "Context7 API Key") | .value' 2>/dev/null || echo "")
     if [ -n "$RESOLVED_C7_KEY" ]; then
