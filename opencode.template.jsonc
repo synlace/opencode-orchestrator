@@ -1,0 +1,92 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "agent": {
+    "Plan": {
+      "model": "openrouter/google/gemini-3.5-flash"
+    },
+    "Build": {
+      "model": "openrouter/google/gemini-3.5-flash"
+    },
+    "plan": {
+      "model": "openrouter/google/gemini-3.5-flash"
+    },
+    "build": {
+      "model": "openrouter/google/gemini-3.5-flash"
+    }
+  },
+  "skills": {
+    "paths": [
+      "/home/user/git/github/monorepo/skills"
+    ]
+  },
+  "mcp": {
+    "context7": {
+      "type": "remote",
+      "url": "https://mcp.context7.com/mcp",
+      "headers": {
+        "Authorization": "@CONTEXT7_AUTHORIZATION@"
+      },
+      "enabled": true
+    },
+    "linear": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "mcp-server-linear"
+      ],
+      "enabled": true
+    },
+    "gmail": {
+      "type": "local",
+      "command": [
+        "node",
+        "/opt/mcp-servers/gmail-local-mcp.js"
+      ],
+      "enabled": true
+    },
+    "calendar": {
+      "type": "local",
+      "command": [
+        "node",
+        "/opt/mcp-servers/calendar-local-mcp.js"
+      ],
+      "enabled": true
+    },
+    "drive": {
+      "type": "local",
+      "command": [
+        "node",
+        "/opt/mcp-servers/drive-local-mcp.js"
+      ],
+      "enabled": true
+    },
+    "people": {
+      "type": "local",
+      "command": [
+        "node",
+        "/opt/mcp-servers/people-local-mcp.js"
+      ],
+      "enabled": true
+    },
+    "maps": {
+      "type": "remote",
+      "url": "https://mapstools.googleapis.com/mcp",
+      "headers": {
+        "X-Goog-Api-Key": "@GOOGLE_MAPS_API_KEY@"
+      },
+      "enabled": true
+    }
+  },
+  "plugin": [
+    "/home/user/.config/opencode/maps-fix-plugin.ts"
+  ],
+  "permission": {
+    "linear_*": "allow",
+    "gmail_*": "allow",
+    "calendar_*": "allow",
+    "drive_*": "allow",
+    "people_*": "allow",
+    "maps_*": "allow"
+  }
+}
