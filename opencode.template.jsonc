@@ -41,7 +41,7 @@
       "type": "local",
       "command": [
         "node",
-        "/opt/mcp-servers/gmail-local-mcp.js"
+        "/opt/mcp-servers/gmail.js"
       ],
       "enabled": true
     },
@@ -49,7 +49,7 @@
       "type": "local",
       "command": [
         "node",
-        "/opt/mcp-servers/calendar-local-mcp.js"
+        "/opt/mcp-servers/calendar.js"
       ],
       "enabled": true
     },
@@ -57,7 +57,7 @@
       "type": "local",
       "command": [
         "node",
-        "/opt/mcp-servers/drive-local-mcp.js"
+        "/opt/mcp-servers/drive.js"
       ],
       "enabled": true
     },
@@ -65,7 +65,7 @@
       "type": "local",
       "command": [
         "node",
-        "/opt/mcp-servers/people-local-mcp.js"
+        "/opt/mcp-servers/people.js"
       ],
       "enabled": true
     },
