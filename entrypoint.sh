@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # If the first argument is "init", execute the bundled ecc-git-init script
-if [ "$1" = "init" ]; then
+if [ "${1:-}" = "init" ]; then
   shift
   # Ensure BWS variables are exported for the initializer
   if [ -n "${BWS_ACCESS_TOKEN:-}" ]; then
@@ -41,6 +41,13 @@ if [ -n "${BWS_ACCESS_TOKEN:-}" ]; then
     if [ -n "$RESOLVED_GH_PAT" ]; then
       export GITHUB_TOKEN="$RESOLVED_GH_PAT"
       echo "✓ [Container] Successfully resolved GitHub PAT." >&2
+    fi
+
+    # Resolve OpenRouter API Key and export as OPENROUTER_API_KEY
+    RESOLVED_OR_KEY=$(echo "$SECRET_DATA" | jq -r '.[] | select(.key == "OpenRouter API Key") | .value' 2>/dev/null | xargs || echo "")
+    if [ -n "$RESOLVED_OR_KEY" ]; then
+      export OPENROUTER_API_KEY="$RESOLVED_OR_KEY"
+      echo "✓ [Container] Successfully resolved OpenRouter API Key." >&2
     fi
 
     # Resolve Context7 API Key and format as Bearer token
@@ -91,9 +98,15 @@ CONFIG_PATH="/home/user/.config/opencode/opencode.jsonc"
 
 if [ -f "$TEMPLATE_PATH" ]; then
   mkdir -p "$(dirname "$CONFIG_PATH")"
+  
+  # Resolve the default agent model (fallback to Gemini 3.5 Flash on OpenRouter)
+  ACTIVE_MODEL="${OPENCODE_MODEL:-openrouter/google/gemini-3.5-flash}"
+  echo "🤖 [Container] Active Agent Model: $ACTIVE_MODEL" >&2
+
   sed \
     -e "s|@CONTEXT7_AUTHORIZATION@|${CONTEXT7_AUTHORIZATION:-}|g" \
     -e "s|@GOOGLE_MAPS_API_KEY@|${GOOGLE_MAPS_API_KEY:-}|g" \
+    -e "s|@OPENCODE_AGENT_MODEL@|${ACTIVE_MODEL}|g" \
     "$TEMPLATE_PATH" > "$CONFIG_PATH"
   chmod 600 "$CONFIG_PATH"
   echo "✓ [Container] Generated opencode.jsonc config file." >&2

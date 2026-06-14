@@ -2,16 +2,16 @@
   "$schema": "https://opencode.ai/config.json",
   "agent": {
     "Plan": {
-      "model": "openrouter/google/gemini-3.5-flash"
+      "model": "@OPENCODE_AGENT_MODEL@"
     },
     "Build": {
-      "model": "openrouter/google/gemini-3.5-flash"
+      "model": "@OPENCODE_AGENT_MODEL@"
     },
     "plan": {
-      "model": "openrouter/google/gemini-3.5-flash"
+      "model": "@OPENCODE_AGENT_MODEL@"
     },
     "build": {
-      "model": "openrouter/google/gemini-3.5-flash"
+      "model": "@OPENCODE_AGENT_MODEL@"
     }
   },
   "skills": {

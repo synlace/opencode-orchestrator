@@ -2,6 +2,51 @@
 # opencode-orchestrator installer
 set -euo pipefail
 
+# Check and install system dependencies (Docker, Git, Curl)
+ensure_dependencies() {
+  local missing=()
+  for cmd in docker git curl; do
+    if ! command -v "$cmd" &>/dev/null; then
+      missing+=("$cmd")
+    fi
+  done
+
+  if [ ${#missing[@]} -eq 0 ]; then
+    return 0
+  fi
+
+  echo "🔍 Missing required system dependencies: ${missing[*]}"
+
+  # Check if apt-get is available (Debian/Ubuntu)
+  if command -v apt-get &>/dev/null; then
+    echo "📦 Debian/Ubuntu detected. Installing missing dependencies..."
+    
+    # Resolve package names
+    local packages=()
+    for cmd in "${missing[@]}"; do
+      case "$cmd" in
+        docker) packages+=("docker.io") ;;
+        *) packages+=("$cmd") ;;
+      esac
+    done
+
+    # Run apt-get update & install
+    if [ "$EUID" -eq 0 ]; then
+      apt-get update && apt-get install -y "${packages[@]}"
+    elif command -v sudo &>/dev/null; then
+      sudo apt-get update && sudo apt-get install -y "${packages[@]}"
+    else
+      echo "❌ Error: Root or sudo privileges required to install: ${packages[*]}"
+      exit 1
+    fi
+  else
+    echo "⚠️  Please manually install the following packages: ${missing[*]}"
+    exit 1
+  fi
+}
+
+ensure_dependencies
+
 echo "🔧 Installing opencode-orchestrator CLI wrapper..."
 
 # Determine installation directory (default to ~/.local/bin)
@@ -62,6 +107,8 @@ exec docker run \
   -w "$PWD" \
   -e HOME=/home/user \
   -e BWS_ACCESS_TOKEN="$LOCAL_BWS_TOKEN" \
+  -e OPENROUTER_API_KEY="${OPENROUTER_API_KEY:-}" \
+  -e OPENCODE_MODEL="${OPENCODE_MODEL:-}" \
   opencode-custom:latest "$@"
 EOF
 
