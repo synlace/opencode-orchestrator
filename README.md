@@ -44,6 +44,25 @@ The orchestrator dynamically reads from your local shell environment and forward
 
 ---
 
+## 🔑 Bitwarden Secrets Manager (BWS) Keys Guide
+
+If you are using BWS, add the following key-value secrets to your BWS Project. Each key must match the exact naming below:
+
+| Key Name in BWS | Description & Purpose | Where to Get / How to Create |
+| :--- | :--- | :--- |
+| **`Linear API Key`** | Authenticates the Linear integration to manage issues and projects. | [Linear API Settings](https://linear.app/settings/api) |
+| **`GitHub PAT`** | Personal Access Token to authenticate the GitHub CLI (`gh`) and register SSH keys. | [GitHub Developer Settings](https://github.com/settings/tokens) |
+| **`OpenRouter API Key`** | Authenticates OpenRouter to access Gemini, Claude, or other LLMs. | [OpenRouter Keys Settings](https://openrouter.ai/settings/keys) |
+| **`Context7 API Key`** | Authenticates the Context7 remote MCP server for queries and documentation. | [Context7 Console](https://context7.com) |
+| **`Google Maps API Key`** | Authenticates the Google Maps remote MCP server. | [Google Maps API Key Guide](https://developers.google.com/maps/documentation/javascript/get-api-key) |
+| **`Gmail Client ID`** | Google OAuth Client ID for local Google MCP servers. | [Google Workspace MCP Credentials Guide](https://developers.google.com/workspace/gmail/api/guides/configure-mcp-server) |
+| **`Gmail Client Secret`** | Google OAuth Client Secret for local Google MCP servers. | [Google Workspace MCP Credentials Guide](https://developers.google.com/workspace/gmail/api/guides/configure-mcp-server) |
+| **`Gmail Refresh Token`** | OAuth Refresh Token to dynamically generate Gmail session access tokens. | [Google Workspace MCP Credentials Guide](https://developers.google.com/workspace/gmail/api/guides/configure-mcp-server) |
+| **`Google Refresh Token`** | *Alternative.* OAuth Refresh Token for Calendar, Drive, and People MCP servers. | [Google Workspace MCP Credentials Guide](https://developers.google.com/workspace/drive/api/guides/configure-mcp-server) |
+| **`SSH Private Key`** | Your custom ED25519 private key to authenticate against private repositories. | [GitHub SSH Key Guide](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent) |
+
+---
+
 ## 🚀 Usage
 
 ### Mode A: Fully Automated (BWS)
