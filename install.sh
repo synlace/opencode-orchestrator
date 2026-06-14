@@ -86,12 +86,6 @@ if [ -S /var/run/docker.sock ]; then
   DOCKER_GID="--group-add $(stat -c '%g' /var/run/docker.sock)"
 fi
 
-# Setup SSH mount if it exists
-SSH_MOUNT=""
-if [ -d "$HOME/.ssh" ]; then
-  SSH_MOUNT="-v $HOME/.ssh:/home/user/.ssh:ro"
-fi
-
 # Execute the container with persistent workspace directories and passed environment variables
 exec docker run \
   -i $TTY_FLAG \
@@ -99,7 +93,6 @@ exec docker run \
   --network host \
   $DOCKER_GID \
   -v "/var/run/docker.sock:/var/run/docker.sock" \
-  $SSH_MOUNT \
   -v "$HOME/.config/opencode:/home/user/.config/opencode" \
   -v "$HOME/.local/share/opencode:/home/user/.local/share/opencode" \
   -v "$HOME/.local/state/opencode:/home/user/.local/state/opencode" \

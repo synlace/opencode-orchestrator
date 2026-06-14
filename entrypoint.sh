@@ -125,40 +125,47 @@ fi
 
 # 1.5 SSH Self-Healing Setup
 if [ ! -f "/home/user/.ssh/id_ed25519" ]; then
-  mkdir -p /home/user/.ssh
-  chmod 700 /home/user/.ssh
+  # Only attempt self-healing/generation if we have a writable directory
+  if [ ! -d "/home/user/.ssh" ] || [ -w "/home/user/.ssh" ]; then
+    mkdir -p /home/user/.ssh
+    chmod 700 /home/user/.ssh
 
-  # 1. Try to load from BWS resolved key
-  if [ -n "${SSH_PRIVATE_KEY_BWS:-}" ]; then
-    echo "🔑 [Container] Found SSH Private Key in BWS. Loading..." >&2
-    echo "$SSH_PRIVATE_KEY_BWS" > /home/user/.ssh/id_ed25519
-    chmod 600 /home/user/.ssh/id_ed25519
-  # 2. Try to load from host-supplied env variable
-  elif [ -n "${SSH_PRIVATE_KEY:-}" ]; then
-    echo "🔑 [Container] Found SSH Private Key in host environment. Loading..." >&2
-    echo "$SSH_PRIVATE_KEY" > /home/user/.ssh/id_ed25519
-    chmod 600 /home/user/.ssh/id_ed25519
-  # 3. Generate a fresh key pair on the fly
-  else
-    echo "🔑 [Container] No SSH key found. Generating a new ED25519 key..." >&2
-    ssh-keygen -t ed25519 -f /home/user/.ssh/id_ed25519 -N "" -q -C "opencode-agent-$(hostname)"
-    chmod 600 /home/user/.ssh/id_ed25519
-    
-    # Automatically register to GitHub if authenticated
-    if [ -n "${GITHUB_TOKEN:-}" ]; then
-      echo "🐙 [Container] Automatically registering the new SSH key to your GitHub account..." >&2
-      gh ssh-key add /home/user/.ssh/id_ed25519.pub --title "opencode-orchestrator-$(hostname)" 2>/dev/null || \
-        echo "⚠️  Could not auto-register SSH key (it may already be registered or token lacks write:public_key scope)." >&2
+    # 1. Try to load from BWS resolved key
+    if [ -n "${SSH_PRIVATE_KEY_BWS:-}" ]; then
+      echo "🔑 [Container] Found SSH Private Key in BWS. Loading..." >&2
+      echo "$SSH_PRIVATE_KEY_BWS" > /home/user/.ssh/id_ed25519
+      chmod 600 /home/user/.ssh/id_ed25519
+    # 2. Try to load from host-supplied env variable
+    elif [ -n "${SSH_PRIVATE_KEY:-}" ]; then
+      echo "🔑 [Container] Found SSH Private Key in host environment. Loading..." >&2
+      echo "$SSH_PRIVATE_KEY" > /home/user/.ssh/id_ed25519
+      chmod 600 /home/user/.ssh/id_ed25519
+    # 3. Generate a fresh key pair on the fly
     else
-      echo "👉 Please add this public key to your GitHub account settings manually:" >&2
-      cat /home/user/.ssh/id_ed25519.pub >&2
+      echo "🔑 [Container] No SSH key found. Generating a new ED25519 key..." >&2
+      ssh-keygen -t ed25519 -f /home/user/.ssh/id_ed25519 -N "" -q -C "opencode-agent-$(hostname)"
+      chmod 600 /home/user/.ssh/id_ed25519
+      
+      # Automatically register to GitHub if authenticated
+      if [ -n "${GITHUB_TOKEN:-}" ]; then
+        echo "🐙 [Container] Automatically registering the new SSH key to your GitHub account..." >&2
+        gh ssh-key add /home/user/.ssh/id_ed25519.pub --title "opencode-orchestrator-$(hostname)" 2>/dev/null || \
+          echo "⚠️  Could not auto-register SSH key (it may already be registered or token lacks write:public_key scope)." >&2
+      else
+        echo "👉 Please add this public key to your GitHub account settings manually:" >&2
+        cat /home/user/.ssh/id_ed25519.pub >&2
+      fi
     fi
+  else
+    echo "ℹ️ [Container] SSH directory is read-only. Skipping self-healing key generation." >&2
   fi
 fi
 
-# Pre-populate GitHub known hosts to avoid strict host key prompts
-mkdir -p /home/user/.ssh
-ssh-keyscan github.com >> /home/user/.ssh/known_hosts 2>/dev/null
+# Pre-populate GitHub known hosts if the directory is writable
+if [ ! -d "/home/user/.ssh" ] || [ -w "/home/user/.ssh" ]; then
+  mkdir -p /home/user/.ssh
+  ssh-keyscan github.com >> /home/user/.ssh/known_hosts 2>/dev/null
+fi
 
 # 2. Dynamically render the active user-level configuration from the template inside the container
 TEMPLATE_PATH="/etc/opencode/opencode.template.jsonc"
