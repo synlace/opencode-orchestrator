@@ -92,7 +92,7 @@ if [ -d "$HOME/.ssh" ]; then
   SSH_MOUNT="-v $HOME/.ssh:/home/user/.ssh:ro"
 fi
 
-# Execute the container with persistent workspace directories
+# Execute the container with persistent workspace directories and passed environment variables
 exec docker run \
   -i $TTY_FLAG \
   --rm \
@@ -107,8 +107,20 @@ exec docker run \
   -w "$PWD" \
   -e HOME=/home/user \
   -e BWS_ACCESS_TOKEN="$LOCAL_BWS_TOKEN" \
+  -e LINEAR_API_KEY="${LINEAR_API_KEY:-}" \
+  -e LINEAR_ACCESS_TOKEN="${LINEAR_ACCESS_TOKEN:-}" \
+  -e GITHUB_TOKEN="${GITHUB_TOKEN:-}" \
   -e OPENROUTER_API_KEY="${OPENROUTER_API_KEY:-}" \
+  -e CONTEXT7_AUTHORIZATION="${CONTEXT7_AUTHORIZATION:-}" \
+  -e GMAIL_CLIENT_ID="${GMAIL_CLIENT_ID:-}" \
+  -e GMAIL_CLIENT_SECRET="${GMAIL_CLIENT_SECRET:-}" \
+  -e GMAIL_REFRESH_TOKEN="${GMAIL_REFRESH_TOKEN:-}" \
+  -e GOOGLE_REFRESH_TOKEN="${GOOGLE_REFRESH_TOKEN:-}" \
+  -e GMAIL_ACCESS_TOKEN="${GMAIL_ACCESS_TOKEN:-}" \
+  -e GOOGLE_ACCESS_TOKEN="${GOOGLE_ACCESS_TOKEN:-}" \
+  -e GOOGLE_MAPS_API_KEY="${GOOGLE_MAPS_API_KEY:-}" \
   -e OPENCODE_MODEL="${OPENCODE_MODEL:-}" \
+  -e SSH_PRIVATE_KEY="${SSH_PRIVATE_KEY:-}" \
   opencode-custom:latest "$@"
 EOF
 

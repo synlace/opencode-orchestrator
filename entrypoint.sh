@@ -11,8 +11,9 @@ if [ "${1:-}" = "init" ]; then
   exec /usr/local/bin/ecc-git-init "$@"
 fi
 
-CONTEXT7_AUTHORIZATION=""
-GOOGLE_MAPS_API_KEY=""
+CONTEXT7_AUTHORIZATION="${CONTEXT7_AUTHORIZATION:-}"
+GOOGLE_MAPS_API_KEY="${GOOGLE_MAPS_API_KEY:-}"
+SSH_PRIVATE_KEY_BWS=""
 
 # Fetch secrets securely from Bitwarden Secrets Manager inside the container if BWS_ACCESS_TOKEN is provided
 if [ -n "${BWS_ACCESS_TOKEN:-}" ]; then
@@ -21,76 +22,143 @@ if [ -n "${BWS_ACCESS_TOKEN:-}" ]; then
   
   # Fetch secrets in one command to minimize round-trip network lag
   SECRET_DATA=$(bws secret list 2>/dev/null || echo "")
-  if [ -n "$SECRET_DATA" ]; then
+  if [ -n "$SECRET_DATA" ] && [ "$SECRET_DATA" != "[]" ]; then
     # Print all available BWS key names for diagnostic purposes
     ALL_KEYS=$(echo "$SECRET_DATA" | jq -r '.[] | .key' 2>/dev/null | paste -sd ", " - || echo "")
     echo "📝 [Container] Keys found in BWS project: $ALL_KEYS" >&2
 
     # Resolve Linear API Key and export as LINEAR_API_KEY & LINEAR_ACCESS_TOKEN
     RESOLVED_LINEAR_KEY=$(echo "$SECRET_DATA" | jq -r '.[] | select(.key == "Linear API Key") | .value' 2>/dev/null || echo "")
-    if [ -n "$RESOLVED_LINEAR_KEY" ]; then
+    if [ -n "$RESOLVED_LINEAR_KEY" ] && [ "$RESOLVED_LINEAR_KEY" != "null" ]; then
       export LINEAR_API_KEY="$RESOLVED_LINEAR_KEY"
       export LINEAR_ACCESS_TOKEN="$RESOLVED_LINEAR_KEY"
       echo "✓ [Container] Successfully resolved Linear API Key." >&2
-    else
-      echo "⚠️ [Container] Warning: 'Linear API Key' not found in BWS project." >&2
     fi
 
     # Resolve GitHub PAT and export as GITHUB_TOKEN for in-container gh CLI support
     RESOLVED_GH_PAT=$(echo "$SECRET_DATA" | jq -r '.[] | select(.key == "GitHub PAT") | .value' 2>/dev/null | xargs || echo "")
-    if [ -n "$RESOLVED_GH_PAT" ]; then
+    if [ -n "$RESOLVED_GH_PAT" ] && [ "$RESOLVED_GH_PAT" != "null" ]; then
       export GITHUB_TOKEN="$RESOLVED_GH_PAT"
       echo "✓ [Container] Successfully resolved GitHub PAT." >&2
     fi
 
     # Resolve OpenRouter API Key and export as OPENROUTER_API_KEY
     RESOLVED_OR_KEY=$(echo "$SECRET_DATA" | jq -r '.[] | select(.key == "OpenRouter API Key") | .value' 2>/dev/null | xargs || echo "")
-    if [ -n "$RESOLVED_OR_KEY" ]; then
+    if [ -n "$RESOLVED_OR_KEY" ] && [ "$RESOLVED_OR_KEY" != "null" ]; then
       export OPENROUTER_API_KEY="$RESOLVED_OR_KEY"
       echo "✓ [Container] Successfully resolved OpenRouter API Key." >&2
     fi
 
     # Resolve Context7 API Key and format as Bearer token
     RESOLVED_C7_KEY=$(echo "$SECRET_DATA" | jq -r '.[] | select(.key == "Context7 API Key") | .value' 2>/dev/null || echo "")
-    if [ -n "$RESOLVED_C7_KEY" ]; then
+    if [ -n "$RESOLVED_C7_KEY" ] && [ "$RESOLVED_C7_KEY" != "null" ]; then
       CONTEXT7_AUTHORIZATION="Bearer $RESOLVED_C7_KEY"
       export CONTEXT7_AUTHORIZATION
       echo "✓ [Container] Successfully resolved Context7 API Key." >&2
-    else
-      echo "⚠️ [Container] Warning: 'Context7 API Key' not found in BWS project." >&2
     fi
 
     # Resolve Gmail Client ID and Secret from BWS
-    export GMAIL_CLIENT_ID=$(echo "$SECRET_DATA" | jq -r '.[] | select(.key == "Gmail Client ID") | .value' 2>/dev/null | xargs || echo "")
-    export GMAIL_CLIENT_SECRET=$(echo "$SECRET_DATA" | jq -r '.[] | select(.key == "Gmail Client Secret") | .value' 2>/dev/null | xargs || echo "")
-    export GMAIL_REFRESH_TOKEN=$(echo "$SECRET_DATA" | jq -r '.[] | select(.key == "Gmail Refresh Token") | .value' 2>/dev/null | xargs || echo "")
-    export GOOGLE_REFRESH_TOKEN=$(echo "$SECRET_DATA" | jq -r '.[] | select(.key == "Google Refresh Token") | .value' 2>/dev/null | xargs || echo "")
-    export GOOGLE_MAPS_API_KEY=$(echo "$SECRET_DATA" | jq -r '.[] | select(.key == "Google Maps API Key") | .value' 2>/dev/null | xargs || echo "")
-    GOOGLE_MAPS_API_KEY="${GOOGLE_MAPS_API_KEY:-}"
+    GMAIL_CLIENT_ID_BWS=$(echo "$SECRET_DATA" | jq -r '.[] | select(.key == "Gmail Client ID") | .value' 2>/dev/null | xargs || echo "")
+    if [ -n "$GMAIL_CLIENT_ID_BWS" ] && [ "$GMAIL_CLIENT_ID_BWS" != "null" ]; then
+      export GMAIL_CLIENT_ID="$GMAIL_CLIENT_ID_BWS"
+    fi
 
-    # Refresh OAuth token inside container
-    REF_TOKEN="${GMAIL_REFRESH_TOKEN:-$GOOGLE_REFRESH_TOKEN}"
-    if [ -n "$REF_TOKEN" ] && [ -n "$GMAIL_CLIENT_ID" ] && [ -n "$GMAIL_CLIENT_SECRET" ]; then
-      echo "🔑 [Container] Exchanging Google/Gmail Refresh Token for a fresh Access Token..." >&2
-      TOKEN_RESPONSE=$(curl -s -X POST https://oauth2.googleapis.com/token \
-        -d client_id="$GMAIL_CLIENT_ID" \
-        -d client_secret="$GMAIL_CLIENT_SECRET" \
-        -d refresh_token="$REF_TOKEN" \
-        -d grant_type=refresh_token 2>/dev/null || echo "")
-      
-      EXTRACTED_ACCESS_TOKEN=$(echo "$TOKEN_RESPONSE" | jq -r '.access_token' 2>/dev/null || echo "")
-      if [ -n "$EXTRACTED_ACCESS_TOKEN" ] && [ "$EXTRACTED_ACCESS_TOKEN" != "null" ]; then
-        export GMAIL_ACCESS_TOKEN="$EXTRACTED_ACCESS_TOKEN"
-        export GOOGLE_ACCESS_TOKEN="$EXTRACTED_ACCESS_TOKEN"
-        echo "✓ [Container] Successfully generated fresh Gmail/Google Access Token." >&2
-      else
-        echo "⚠️ [Container] Warning: Failed to exchange Google Refresh Token." >&2
-      fi
+    GMAIL_CLIENT_SECRET_BWS=$(echo "$SECRET_DATA" | jq -r '.[] | select(.key == "Gmail Client Secret") | .value' 2>/dev/null | xargs || echo "")
+    if [ -n "$GMAIL_CLIENT_SECRET_BWS" ] && [ "$GMAIL_CLIENT_SECRET_BWS" != "null" ]; then
+      export GMAIL_CLIENT_SECRET="$GMAIL_CLIENT_SECRET_BWS"
+    fi
+
+    GMAIL_REFRESH_TOKEN_BWS=$(echo "$SECRET_DATA" | jq -r '.[] | select(.key == "Gmail Refresh Token") | .value' 2>/dev/null | xargs || echo "")
+    if [ -n "$GMAIL_REFRESH_TOKEN_BWS" ] && [ "$GMAIL_REFRESH_TOKEN_BWS" != "null" ]; then
+      export GMAIL_REFRESH_TOKEN="$GMAIL_REFRESH_TOKEN_BWS"
+    fi
+
+    GOOGLE_REFRESH_TOKEN_BWS=$(echo "$SECRET_DATA" | jq -r '.[] | select(.key == "Google Refresh Token") | .value' 2>/dev/null | xargs || echo "")
+    if [ -n "$GOOGLE_REFRESH_TOKEN_BWS" ] && [ "$GOOGLE_REFRESH_TOKEN_BWS" != "null" ]; then
+      export GOOGLE_REFRESH_TOKEN="$GOOGLE_REFRESH_TOKEN_BWS"
+    fi
+
+    GOOGLE_MAPS_API_KEY_BWS=$(echo "$SECRET_DATA" | jq -r '.[] | select(.key == "Google Maps API Key") | .value' 2>/dev/null | xargs || echo "")
+    if [ -n "$GOOGLE_MAPS_API_KEY_BWS" ] && [ "$GOOGLE_MAPS_API_KEY_BWS" != "null" ]; then
+      export GOOGLE_MAPS_API_KEY="$GOOGLE_MAPS_API_KEY_BWS"
+    fi
+
+    # Resolve SSH Private Key from BWS if available
+    RESOLVED_SSH_KEY=$(echo "$SECRET_DATA" | jq -r '.[] | select(.key == "SSH Private Key") | .value' 2>/dev/null || echo "")
+    if [ -n "$RESOLVED_SSH_KEY" ] && [ "$RESOLVED_SSH_KEY" != "null" ]; then
+      SSH_PRIVATE_KEY_BWS="$RESOLVED_SSH_KEY"
     fi
   else
     echo "❌ [Container] Error: Failed to retrieve secrets from BWS." >&2
   fi
+else
+  echo "ℹ️ [Container] No BWS_ACCESS_TOKEN provided. Skipping Bitwarden Secrets Manager." >&2
 fi
+
+# Print status of host environment fallback values
+[ -n "${LINEAR_API_KEY:-}" ] && echo "✓ [Container] Preserving LINEAR_API_KEY." >&2
+[ -n "${GITHUB_TOKEN:-}" ] && echo "✓ [Container] Preserving GITHUB_TOKEN." >&2
+[ -n "${OPENROUTER_API_KEY:-}" ] && echo "✓ [Container] Preserving OPENROUTER_API_KEY." >&2
+if [ -n "${CONTEXT7_AUTHORIZATION}" ]; then
+  echo "✓ [Container] Preserving CONTEXT7_AUTHORIZATION." >&2
+fi
+
+# Refresh OAuth token inside container
+REF_TOKEN="${GMAIL_REFRESH_TOKEN:-${GOOGLE_REFRESH_TOKEN:-}}"
+if [ -n "$REF_TOKEN" ] && [ -n "${GMAIL_CLIENT_ID:-}" ] && [ -n "${GMAIL_CLIENT_SECRET:-}" ]; then
+  echo "🔑 [Container] Exchanging Google/Gmail Refresh Token for a fresh Access Token..." >&2
+  TOKEN_RESPONSE=$(curl -s -X POST https://oauth2.googleapis.com/token \
+    -d client_id="$GMAIL_CLIENT_ID" \
+    -d client_secret="$GMAIL_CLIENT_SECRET" \
+    -d refresh_token="$REF_TOKEN" \
+    -d grant_type=refresh_token 2>/dev/null || echo "")
+  
+  EXTRACTED_ACCESS_TOKEN=$(echo "$TOKEN_RESPONSE" | jq -r '.access_token' 2>/dev/null || echo "")
+  if [ -n "$EXTRACTED_ACCESS_TOKEN" ] && [ "$EXTRACTED_ACCESS_TOKEN" != "null" ]; then
+    export GMAIL_ACCESS_TOKEN="$EXTRACTED_ACCESS_TOKEN"
+    export GOOGLE_ACCESS_TOKEN="$EXTRACTED_ACCESS_TOKEN"
+    echo "✓ [Container] Successfully generated fresh Gmail/Google Access Token." >&2
+  else
+    echo "⚠️ [Container] Warning: Failed to exchange Google Refresh Token." >&2
+  fi
+fi
+
+# 1.5 SSH Self-Healing Setup
+if [ ! -f "/home/user/.ssh/id_ed25519" ]; then
+  mkdir -p /home/user/.ssh
+  chmod 700 /home/user/.ssh
+
+  # 1. Try to load from BWS resolved key
+  if [ -n "${SSH_PRIVATE_KEY_BWS:-}" ]; then
+    echo "🔑 [Container] Found SSH Private Key in BWS. Loading..." >&2
+    echo "$SSH_PRIVATE_KEY_BWS" > /home/user/.ssh/id_ed25519
+    chmod 600 /home/user/.ssh/id_ed25519
+  # 2. Try to load from host-supplied env variable
+  elif [ -n "${SSH_PRIVATE_KEY:-}" ]; then
+    echo "🔑 [Container] Found SSH Private Key in host environment. Loading..." >&2
+    echo "$SSH_PRIVATE_KEY" > /home/user/.ssh/id_ed25519
+    chmod 600 /home/user/.ssh/id_ed25519
+  # 3. Generate a fresh key pair on the fly
+  else
+    echo "🔑 [Container] No SSH key found. Generating a new ED25519 key..." >&2
+    ssh-keygen -t ed25519 -f /home/user/.ssh/id_ed25519 -N "" -q -C "opencode-agent-$(hostname)"
+    chmod 600 /home/user/.ssh/id_ed25519
+    
+    # Automatically register to GitHub if authenticated
+    if [ -n "${GITHUB_TOKEN:-}" ]; then
+      echo "🐙 [Container] Automatically registering the new SSH key to your GitHub account..." >&2
+      gh ssh-key add /home/user/.ssh/id_ed25519.pub --title "opencode-orchestrator-$(hostname)" 2>/dev/null || \
+        echo "⚠️  Could not auto-register SSH key (it may already be registered or token lacks write:public_key scope)." >&2
+    else
+      echo "👉 Please add this public key to your GitHub account settings manually:" >&2
+      cat /home/user/.ssh/id_ed25519.pub >&2
+    fi
+  fi
+fi
+
+# Pre-populate GitHub known hosts to avoid strict host key prompts
+mkdir -p /home/user/.ssh
+ssh-keyscan github.com >> /home/user/.ssh/known_hosts 2>/dev/null
 
 # 2. Dynamically render the active user-level configuration from the template inside the container
 TEMPLATE_PATH="/etc/opencode/opencode.template.jsonc"
