@@ -124,6 +124,12 @@ if [ -n "$REF_TOKEN" ] && [ -n "${GMAIL_CLIENT_ID:-}" ] && [ -n "${GMAIL_CLIENT_
 fi
 
 # 1.5 SSH Self-Healing Setup
+if [ "$(id -u)" -eq 0 ] && [ ! -L /root/.ssh ] && [ "/root" != "/home/user" ]; then
+  mkdir -p /home/user/.ssh
+  rm -rf /root/.ssh
+  ln -sf /home/user/.ssh /root/.ssh
+fi
+
 if [ ! -f "/home/user/.ssh/id_ed25519" ]; then
   # Only attempt self-healing/generation if we have a writable directory
   if [ ! -d "/home/user/.ssh" ] || [ -w "/home/user/.ssh" ]; then
