@@ -1,5 +1,9 @@
 # justfile for environment management
 
+# Show available commands
+default:
+    @just --list
+
 # Build the Docker image
 build:
     docker build -t app:latest .
