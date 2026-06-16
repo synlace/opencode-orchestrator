@@ -3,24 +3,33 @@
   "model": "@OPENCODE_AGENT_MODEL@",
   "small_model": "@OPENCODE_AGENT_MODEL@",
   "agent": {
-    "Plan": {
-      "model": "@OPENCODE_AGENT_MODEL@"
-    },
-    "Build": {
-      "model": "@OPENCODE_AGENT_MODEL@"
-    },
-    "plan": {
-      "model": "@OPENCODE_AGENT_MODEL@"
-    },
     "build": {
+      "description": "Primary coding agent",
+      "mode": "primary",
+      "model": "@OPENCODE_AGENT_MODEL@"
+    },
+    "planner": {
+      "description": "Expert planning specialist",
+      "mode": "subagent",
       "model": "@OPENCODE_AGENT_MODEL@"
     }
   },
   "command": {
     "plan": {
       "description": "Create implementation plan with risk assessment",
-      "template": "{file:/home/user/.config/opencode/ecc-upstream/.opencode/commands/plan.md}\n\n$ARGUMENTS",
-      "agent": "planner"
+      "template": "{file:/home/user/.config/opencode/ecc-upstream/.opencode/commands/plan.md}\n\n$ARGUMENTS"
+    },
+    "build-fix": {
+      "description": "Fix build errors",
+      "template": "{file:/home/user/.config/opencode/ecc-upstream/.opencode/commands/build-fix.md}\n\n$ARGUMENTS"
+    },
+    "code-review": {
+      "description": "Review code quality",
+      "template": "{file:/home/user/.config/opencode/ecc-upstream/.opencode/commands/code-review.md}\n\n$ARGUMENTS"
+    },
+    "refactor-clean": {
+      "description": "Remove dead code",
+      "template": "{file:/home/user/.config/opencode/ecc-upstream/.opencode/commands/refactor-clean.md}\n\n$ARGUMENTS"
     }
   },
   "skills": {

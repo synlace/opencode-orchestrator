@@ -210,6 +210,16 @@ if [ -f "$TEMPLATE_PATH" ]; then
   echo "✓ [Container] Generated opencode.jsonc config file." >&2
 fi
 
+# 2.5 Strip broken agent/subtask frontmatter from ECC upstream command files (always run)
+ECC_COMMANDS_DIR="/home/user/.config/opencode/ecc-upstream/.opencode/commands"
+if [ -d "$ECC_COMMANDS_DIR" ]; then
+  for f in "$ECC_COMMANDS_DIR"/*.md; do
+    [ -f "$f" ] || continue
+    sed -i '/^agent:/d; /^subtask:/d' "$f"
+  done
+  echo "✓ [Container] Stripped agent/subtask frontmatter from ECC commands." >&2
+fi
+
 # 3. Enable ECC global git safety hooks if upstream is present
 UPSTREAM_DIR="/home/user/.config/opencode/ecc-upstream"
 HOOKS_DEST="${ECC_GLOBAL_HOOKS_DIR:-/home/user/.config/opencode/git-hooks}"
