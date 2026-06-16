@@ -1,6 +1,6 @@
 # OpenCode Orchestrator
 
-`opencode-orchestrator` is a self-contained, highly secure, and isolated environment for running OpenCode with Bitwarden Secrets Manager (BWS), local MCP servers (Gmail, Calendar, Drive, People), and a layered custom ECC (Evolutionary Code Conductor) harness.
+`opencode-orchestrator` is a self-contained, highly secure, and isolated environment for running OpenCode with Bitwarden Secrets Manager (BWS), local MCP servers (Gmail, Calendar, Drive, People), and a layered custom ECC (Everything Claude Code) harness.
 
 ---
 
