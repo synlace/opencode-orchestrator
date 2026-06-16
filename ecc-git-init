@@ -223,16 +223,25 @@ cat << 'EOF' > opencode.json
 }
 EOF
 
-# 4. Generate .gitignore
-cat << 'EOF' > .gitignore
-.DS_Store
-.env
-.env.dev
-.env.prod
-node_modules/
-.opencode/dist/
-.opencode/node_modules/
-EOF
+# 4. Merge .gitignore (append missing entries, never overwrite)
+GITIGNORE_ENTRIES=(
+    ".DS_Store"
+    ".env"
+    ".env.dev"
+    ".env.prod"
+    "node_modules/"
+    ".opencode/dist/"
+    ".opencode/node_modules/"
+)
+if [ -f ".gitignore" ]; then
+    for entry in "${GITIGNORE_ENTRIES[@]}"; do
+        if ! grep -qF "$entry" .gitignore 2>/dev/null; then
+            echo "$entry" >> .gitignore
+        fi
+    done
+else
+    printf '%s\n' "${GITIGNORE_ENTRIES[@]}" > .gitignore
+fi
 
 # 4.5 Generate baseline README.md
 cat << EOF > README.md
