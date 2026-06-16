@@ -16,6 +16,13 @@
       "model": "@OPENCODE_AGENT_MODEL@"
     }
   },
+  "command": {
+    "plan": {
+      "description": "Create implementation plan with risk assessment",
+      "template": "{file:/home/user/.config/opencode/ecc-upstream/.opencode/commands/plan.md}\n\n$ARGUMENTS",
+      "agent": "planner"
+    }
+  },
   "skills": {
     "paths": [
       "/home/user/git/github/monorepo/skills"

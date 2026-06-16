@@ -3,6 +3,12 @@ FROM ghcr.io/anomalyco/opencode:latest
 # Install lightweight runtime dependencies
 RUN apk add --no-cache nodejs npm git bash openssh-client docker-cli jq curl unzip github-cli
 
+# Create 'user' account matching host uid/gid so --user $(id -u):$(id -g) works
+RUN (addgroup -g 100 users 2>/dev/null || true) && \
+    (adduser -D -u 1000 -G users -h /home/user user 2>/dev/null || true) && \
+    mkdir -p /home/user/.config /home/user/.ssh && \
+    chown -R user:users /home/user
+
 # Install BWS CLI inside the container
 RUN wget https://github.com/bitwarden/sdk-sm/releases/download/bws-v2.1.0/bws-x86_64-unknown-linux-musl-2.1.0.zip \
     && unzip bws-*.zip -d /usr/local/bin \
