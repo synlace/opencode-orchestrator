@@ -136,4 +136,4 @@ docker run -it --rm \
 
 ## Project Management
 
-- [Linear Workspace](https://linear.app/synlace/project/untitled-7092c8614260)
+- [Linear Workspace](https://linear.app)
