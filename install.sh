@@ -71,7 +71,7 @@ fi
 # Resolve the BWS token securely
 LOCAL_BWS_TOKEN="${BWS_ACCESS_TOKEN:-}"
 if [ -z "$LOCAL_BWS_TOKEN" ] && command -v secret-tool &> /dev/null; then
-  LOCAL_BWS_TOKEN=$(secret-tool lookup service bws-token account synlace 2>/dev/null || echo "")
+  LOCAL_BWS_TOKEN=$(secret-tool lookup service bws-token account "${BWS_ACCOUNT:-synlace}" 2>/dev/null || echo "")
 fi
 
 # Determine TTY
@@ -114,6 +114,11 @@ exec docker run \
   -e GOOGLE_MAPS_API_KEY="${GOOGLE_MAPS_API_KEY:-}" \
   -e OPENCODE_MODEL="${OPENCODE_MODEL:-}" \
   -e SSH_PRIVATE_KEY="${SSH_PRIVATE_KEY:-}" \
+  -e BWS_ACCOUNT="${BWS_ACCOUNT:-synlace}" \
+  -e LINEAR_TEAM_ID="${LINEAR_TEAM_ID:-}" \
+  -e DEFAULT_BRANCH="${DEFAULT_BRANCH:-main}" \
+  -e GIT_USER_NAME="${GIT_USER_NAME:-}" \
+  -e GIT_USER_EMAIL="${GIT_USER_EMAIL:-}" \
   opencode-custom:latest "$@"
 EOF
 

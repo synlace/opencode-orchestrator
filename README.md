@@ -39,13 +39,16 @@ The orchestrator dynamically reads from your local shell environment and forward
 | Variable | Description |
 | :--- | :--- |
 | `BWS_ACCESS_TOKEN` | *Optional.* Your Bitwarden Secrets Manager token to resolve all API keys on boot. |
+| `BWS_ACCOUNT` | *Optional.* BWS account name for OS keyring lookup (defaults to `synlace`). |
 | `OPENCODE_MODEL` | *Optional.* Override default models (defaults to `openrouter/xiaomi/mimo-v2.5`). |
 | `OPENROUTER_API_KEY` | *Optional.* API key if using OpenRouter models (if not fetched from BWS). |
 | `LINEAR_API_KEY` | *Optional.* Linear API key (if not fetched from BWS). |
+| `LINEAR_TEAM_ID` | *Required for `opencode init`.* Linear team UUID for project creation. |
 | `GITHUB_TOKEN` | *Optional.* GitHub Personal Access Token (if not fetched from BWS). |
 | `SSH_PRIVATE_KEY` | *Optional.* Plaintext ED25519 private key to initialize container SSH state. |
 | `GIT_USER_NAME` | *Optional.* Git commit author name (defaults to `opencode`). |
 | `GIT_USER_EMAIL` | *Optional.* Git commit author email (defaults to `opencode@users.noreply.github.com`). |
+| `DEFAULT_BRANCH` | *Optional.* Default git branch name (defaults to `main`). |
 
 ---
 
