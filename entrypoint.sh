@@ -103,6 +103,23 @@ if [ -n "${CONTEXT7_AUTHORIZATION}" ]; then
   echo "✓ [Container] Preserving CONTEXT7_AUTHORIZATION." >&2
 fi
 
+# If the global git config is read-only (mounted from host), route config writes to a writable fallback
+if [ ! -w "/home/user/.gitconfig" ]; then
+  export GIT_CONFIG_GLOBAL="/tmp/.gitconfig"
+  touch "/tmp/.gitconfig" 2>/dev/null || true
+fi
+
+# Set git identity for commits inside the container
+git config --global user.name "${GIT_USER_NAME:-opencode}"
+git config --global user.email "${GIT_USER_EMAIL:-opencode@users.noreply.github.com}"
+
+# Configure git to use GitHub PAT for HTTPS push/pull (gh reads GITHUB_TOKEN natively)
+if [ -n "${GITHUB_TOKEN:-}" ]; then
+  gh auth setup-git 2>/dev/null && \
+    echo "✓ [Container] Git configured for GitHub HTTPS via gh." >&2 || \
+    echo "⚠️ [Container] Warning: gh auth setup-git failed." >&2
+fi
+
 # Refresh OAuth token inside container
 REF_TOKEN="${GMAIL_REFRESH_TOKEN:-${GOOGLE_REFRESH_TOKEN:-}}"
 if [ -n "$REF_TOKEN" ] && [ -n "${GMAIL_CLIENT_ID:-}" ] && [ -n "${GMAIL_CLIENT_SECRET:-}" ]; then
@@ -180,8 +197,8 @@ CONFIG_PATH="/home/user/.config/opencode/opencode.jsonc"
 if [ -f "$TEMPLATE_PATH" ]; then
   mkdir -p "$(dirname "$CONFIG_PATH")"
   
-  # Resolve the default agent model (fallback to Gemini 3.5 Flash on OpenRouter)
-  ACTIVE_MODEL="${OPENCODE_MODEL:-openrouter/google/gemini-3.5-flash}"
+  # Resolve the default agent model (fallback to Xiaomi Mimo 2.5 on OpenRouter)
+  ACTIVE_MODEL="${OPENCODE_MODEL:-openrouter/xiaomi/mimo-v2.5}"
   echo "🤖 [Container] Active Agent Model: $ACTIVE_MODEL" >&2
 
   sed \
@@ -191,6 +208,27 @@ if [ -f "$TEMPLATE_PATH" ]; then
     "$TEMPLATE_PATH" > "$CONFIG_PATH"
   chmod 600 "$CONFIG_PATH"
   echo "✓ [Container] Generated opencode.jsonc config file." >&2
+fi
+
+# 3. Enable ECC global git safety hooks if upstream is present
+UPSTREAM_DIR="/home/user/.config/opencode/ecc-upstream"
+HOOKS_DEST="${ECC_GLOBAL_HOOKS_DIR:-/home/user/.config/opencode/git-hooks}"
+if [ -d "$UPSTREAM_DIR" ]; then
+  # Always configure git to use the hooks inside this container's session
+  git config --global core.hooksPath "$HOOKS_DEST"
+
+  # Only run the heavier file installation if the hooks don't exist in the persistent volume yet
+  if [ ! -f "$HOOKS_DEST/pre-commit" ] || [ ! -f "$HOOKS_DEST/pre-push" ]; then
+    echo "🛡️ [Container] Installing global ECC git safety hooks..." >&2
+    export ECC_GLOBAL_HOOKS_DIR="$HOOKS_DEST"
+    (cd "$UPSTREAM_DIR" && ./scripts/codex/install-global-git-hooks.sh >/dev/null 2>&1 || true)
+  fi
+fi
+
+# 4. Route direct Anthropic SDK calls through OpenRouter to support hardcoded ECC models
+if [ -n "${OPENROUTER_API_KEY:-}" ]; then
+  export ANTHROPIC_API_KEY="$OPENROUTER_API_KEY"
+  export ANTHROPIC_BASE_URL="https://openrouter.ai/api/v1"
 fi
 
 # Clean up BWS session token from env before executing opencode

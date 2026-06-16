@@ -26,7 +26,7 @@ curl -fsSL https://raw.githubusercontent.com/synlace/opencode-orchestrator/main/
 * **Env-Driven Custom Models**: Change your default agent model (e.g. to Claude, GPT-4, or Gemini) dynamically via terminal environment variables without editing configurations.
 * **Bundled Local MCP Servers**: Local MCP servers (Gmail, Calendar, Drive, People) are pre-packaged directly inside the container, eliminating the need to install Node/NPM dependencies on the host machine.
 * **ECC Repository Initializer**: Streamlines repository bootstrapping through `opencode init <repo-name>`, which creates a matching project in Linear and automatically registers/publishes it to GitHub.
-* **Automatic Git Identity**: Git commits inside the container use pre-configured identity (Aidan Marlin / aidan@synlace.ai) for consistent attribution.
+* **Configurable Git Identity**: Git commits inside the container use configurable identity via `GIT_USER_NAME` and `GIT_USER_EMAIL` environment variables.
 * **ECC Global Git Safety Hooks**: Pre-commit and pre-push hooks are installed automatically to enforce code quality standards.
 * **OpenRouter Routing**: Direct Anthropic SDK calls are routed through OpenRouter to support hardcoded ECC models.
 
@@ -44,6 +44,8 @@ The orchestrator dynamically reads from your local shell environment and forward
 | `LINEAR_API_KEY` | *Optional.* Linear API key (if not fetched from BWS). |
 | `GITHUB_TOKEN` | *Optional.* GitHub Personal Access Token (if not fetched from BWS). |
 | `SSH_PRIVATE_KEY` | *Optional.* Plaintext ED25519 private key to initialize container SSH state. |
+| `GIT_USER_NAME` | *Optional.* Git commit author name (defaults to `opencode`). |
+| `GIT_USER_EMAIL` | *Optional.* Git commit author email (defaults to `opencode@users.noreply.github.com`). |
 
 ---
 
