@@ -1,7 +1,7 @@
 FROM ghcr.io/anomalyco/opencode:latest
 
 # Install lightweight runtime dependencies
-RUN apk add --no-cache nodejs npm git bash openssh-client docker-cli jq curl unzip github-cli python3 sqlite just
+RUN apk add --no-cache nodejs npm git bash openssh-client docker-cli jq curl unzip github-cli python3 sqlite just sudo go
 
 # Create 'user' account matching host uid/gid so --user $(id -u):$(id -g) works
 RUN (addgroup -g 100 users 2>/dev/null || true) && \
