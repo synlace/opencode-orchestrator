@@ -4,7 +4,7 @@
 
 ---
 
-## ⚡ Quick Start (One-Line Installation)
+## Quick Start (One-Line Installation)
 
 To download, compile, and register the `opencode` CLI wrapper globally on your host, run this single command:
 
@@ -16,27 +16,30 @@ curl -fsSL https://raw.githubusercontent.com/synlace/opencode-orchestrator/main/
 
 ---
 
-## ✨ Features
+## Features
 
-* **📦 Zero Host Pollution & Total SSH Isolation**: All tools (Git, GitHub CLI, BWS CLI, Node) run strictly containerized. No host `~/.ssh` directory is ever mounted, protecting your host credentials.
-* **🔑 Self-Healing SSH Key Flow**: On boot, the container automatically configures a secure SSH connection:
+* **Zero Host Pollution & Total SSH Isolation**: All tools (Git, GitHub CLI, BWS CLI, Node) run strictly containerized. No host `~/.ssh` directory is ever mounted, protecting your host credentials.
+* **Self-Healing SSH Key Flow**: On boot, the container automatically configures a secure SSH connection:
   1. Loads existing keys if stored in BWS (under `SSH Private Key`) or host environment (`SSH_PRIVATE_KEY`).
   2. If none exist, it **generates a brand-new ED25519 key** inside the container and **automatically registers it with your GitHub account** (using your `GITHUB_TOKEN`).
-* **🌐 Optional Bitwarden Secrets Manager (BWS)**: Run fully integrated with BWS or entirely locally/offline using standard shell environment variables.
-* **🤖 Env-Driven Custom Models**: Change your default agent model (e.g. to Claude, GPT-4, or Gemini) dynamically via terminal environment variables without editing configurations.
-* **🧩 Bundled Local MCP Servers**: Local MCP servers (Gmail, Calendar, Drive, People) are pre-packaged directly inside the container, eliminating the need to install Node/NPM dependencies on the host machine.
-* **🚀 ECC Repository Initializer**: Streamlines repository bootstrapping through `opencode init <repo-name>`, which creates a matching project in Linear and automatically registers/publishes it to GitHub.
+* **Optional Bitwarden Secrets Manager (BWS)**: Run fully integrated with BWS or entirely locally/offline using standard shell environment variables.
+* **Env-Driven Custom Models**: Change your default agent model (e.g. to Claude, GPT-4, or Gemini) dynamically via terminal environment variables without editing configurations.
+* **Bundled Local MCP Servers**: Local MCP servers (Gmail, Calendar, Drive, People) are pre-packaged directly inside the container, eliminating the need to install Node/NPM dependencies on the host machine.
+* **ECC Repository Initializer**: Streamlines repository bootstrapping through `opencode init <repo-name>`, which creates a matching project in Linear and automatically registers/publishes it to GitHub.
+* **Automatic Git Identity**: Git commits inside the container use pre-configured identity (Aidan Marlin / aidan@synlace.ai) for consistent attribution.
+* **ECC Global Git Safety Hooks**: Pre-commit and pre-push hooks are installed automatically to enforce code quality standards.
+* **OpenRouter Routing**: Direct Anthropic SDK calls are routed through OpenRouter to support hardcoded ECC models.
 
 ---
 
-## ⚙️ Configuration & Environment Variables
+## Configuration & Environment Variables
 
 The orchestrator dynamically reads from your local shell environment and forwards the following options through the Docker barrier:
 
 | Variable | Description |
 | :--- | :--- |
 | `BWS_ACCESS_TOKEN` | *Optional.* Your Bitwarden Secrets Manager token to resolve all API keys on boot. |
-| `OPENCODE_MODEL` | *Optional.* Override default models (defaults to `openrouter/google/gemini-3.5-flash`). |
+| `OPENCODE_MODEL` | *Optional.* Override default models (defaults to `openrouter/xiaomi/mimo-v2.5`). |
 | `OPENROUTER_API_KEY` | *Optional.* API key if using OpenRouter models (if not fetched from BWS). |
 | `LINEAR_API_KEY` | *Optional.* Linear API key (if not fetched from BWS). |
 | `GITHUB_TOKEN` | *Optional.* GitHub Personal Access Token (if not fetched from BWS). |
@@ -44,7 +47,7 @@ The orchestrator dynamically reads from your local shell environment and forward
 
 ---
 
-## 🔑 Bitwarden Secrets Manager (BWS) Keys Guide
+## Bitwarden Secrets Manager (BWS) Keys Guide
 
 If you are using BWS, add the following key-value secrets to your BWS Project. Each key must match the exact naming below:
 
@@ -63,7 +66,7 @@ If you are using BWS, add the following key-value secrets to your BWS Project. E
 
 ---
 
-## 🚀 Usage
+## Usage
 
 ### Mode A: Fully Automated (BWS)
 Export your BWS token. The container resolves all keys (Linear, GitHub, OpenRouter, Context7, Maps) and initializes SSH:
@@ -95,7 +98,7 @@ opencode serve --port 9001
 
 ---
 
-## 🛠 Manual Setup & Custom Builds
+## Manual Setup & Custom Builds
 
 If you prefer to build the Docker image and run it manually without using the installation script:
 
@@ -117,3 +120,18 @@ docker run -it --rm \
   -e BWS_ACCESS_TOKEN="your-bws-token-here" \
   opencode-custom:latest
 ```
+
+---
+
+## Environment Management
+
+- `just dev` — Run development environment (loads `.env.dev`)
+- `just prod` — Run production environment (loads `.env.prod`)
+- `just build` — Build the Docker image
+- `just deploy <pr-number>` — Merge PR, rebuild, and restart
+
+---
+
+## Project Management
+
+- [Linear Workspace](https://linear.app/synlace/project/untitled-7092c8614260)
